@@ -49,7 +49,6 @@ int main()
     // ------------------------------------
     Shader ScreenShaders("shaders/4.3.screenquad.vert", "shaders/4.3.raymarcher.frag");
     Shader TerrainShader("shaders/4.3.terrain.comp");
-    Shader SortShader("shaders/4.3.pointsort.comp");
 
     // vaos need to be bound because of biolerplating shizzle (even if not used)
     GLuint vao;
@@ -91,18 +90,6 @@ int main()
         (chunkSize + 4 - 1) / 4,
         (chunkSize + 4 - 1) / 4
     );
-
-    // use point sorting compute shader
-    SortShader.use();
-
-    // dispatch compute shader threads, exactly three (one for each axis being sorted)
-    glDispatchCompute(3, 1, 1);
-
-    // compute error check
-    GLenum err = glGetError();
-    if (err != GL_NO_ERROR) {
-        std::cout << "OpenGL error after dispatch: " << err << std::endl;
-    }
 
     // make sure writes are visible to fragment stage
     glMemoryBarrier(GL_SHADER_STORAGE_BARRIER_BIT);

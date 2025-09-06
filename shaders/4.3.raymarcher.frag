@@ -20,5 +20,5 @@ void main() {
     vec3 lookAt = vec3(0.0, 0.0, 0.0);
     vec3 rd = getRayDir(gl_FragCoord.xy, vec2(800,600), ro, lookAt, 1.0);
 
-    FragColor = vec4(0.5, 1.0); // shade based on hit
+    FragColor = vec4(vec3(0.5), 1.0); // shade based on hit
 }

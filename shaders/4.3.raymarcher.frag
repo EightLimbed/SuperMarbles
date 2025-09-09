@@ -1,7 +1,13 @@
 #version 430 core
 out vec4 FragColor;
 
-uniform float iTime;
+uniform float pPosX;
+uniform float pPosY;
+uniform float pPosZ;
+
+float getPlanet(vec3 p) {
+    return length(p)-1.0;
+}
 
 // camera shizzle
 vec3 getRayDir(vec2 fragCoord, vec2 res, vec3 ro, vec3 lookAt, float zoom) {
@@ -14,11 +20,21 @@ vec3 getRayDir(vec2 fragCoord, vec2 res, vec3 ro, vec3 lookAt, float zoom) {
 
 void main() {
     // camera setup
-    float radius = 5.0;
-    float angle = iTime * 0.6;
-    vec3 ro = vec3(radius*cos(angle), 0.6, radius*sin(angle));
+    FragColor = vec4(0.0);
+    vec3 ro = vec3(pPosX,pPosY,pPosZ)*0.05;
     vec3 lookAt = vec3(0.0, 0.0, 0.0);
     vec3 rd = getRayDir(gl_FragCoord.xy, vec2(800,600), ro, lookAt, 1.0);
 
-    FragColor = vec4(vec3(0.5), 1.0); // shade based on hit
+    float t = 0.0;
+
+    for (int i = 0; i < 128; i++) {
+        vec3 p = ro + t * rd;
+        float d = getPlanet(p);
+        if (d < 0.001) {
+            FragColor = vec4(vec3(0.7,1.2,1.2)-vec3(t/5.0),1.0);
+            break;
+        }
+        t += d;
+        if (t > 40.0) break;
+    }
 }

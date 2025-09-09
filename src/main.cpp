@@ -2,6 +2,7 @@
 #include <GLFW/glfw3.h>
 
 #include <classes/GLshader.h>
+#include <classes/PlayerController.h>
 
 #include <iostream>
 
@@ -9,8 +10,8 @@ void framebuffer_size_callback(GLFWwindow* window, int width, int height);
 void processInput(GLFWwindow *window);
 
 // settings
-const unsigned int SCR_WIDTH = 800;
-const unsigned int SCR_HEIGHT = 600;
+const unsigned int SCR_WIDTH = 400;
+const unsigned int SCR_HEIGHT = 300;
 
 int main()
 {
@@ -27,7 +28,7 @@ int main()
 
     // glfw window creation
     // --------------------
-    GLFWwindow* window = glfwCreateWindow(SCR_WIDTH, SCR_HEIGHT, "BlobEngine", NULL, NULL);
+    GLFWwindow* window = glfwCreateWindow(SCR_WIDTH, SCR_HEIGHT, "SuperMarbles", NULL, NULL);
     if (window == NULL)
     {
         std::cout << "Failed to create GLFW window" << std::endl;
@@ -35,6 +36,7 @@ int main()
         return -1;
     }
     glfwMakeContextCurrent(window);
+    glfwSetInputMode( window, GLFW_STICKY_KEYS, 1 );
     glfwSetFramebufferSizeCallback(window, framebuffer_size_callback);
 
     // glad: load all OpenGL function pointers
@@ -44,6 +46,10 @@ int main()
         std::cout << "Failed to initialize GLAD" << std::endl;
         return -1;
     }
+
+    // initialize player
+    // ------------------------------------
+    PlayerController Player(window);
 
     // build and compile shader program
     // ------------------------------------
@@ -61,36 +67,33 @@ int main()
     // -----------
     while (!glfwWindowShouldClose(window))
     {
-        // input
-        // -----
+        // process input
         processInput(window);
+        Player.HandleInputs(window);
+        ScreenShaders.setFloat("pPosX", Player.posX);
+        ScreenShaders.setFloat("pPosY", Player.posY);
+        ScreenShaders.setFloat("pPosZ", Player.posZ);
 
         // render
-        // ------
-        glClearColor(0.4f, 0.4f, 0.4f, 1.0f);
         glClear(GL_COLOR_BUFFER_BIT);
         
         // compute shaders go here
 
-        // render the triangle
+        // render the triangle and fragment
         ScreenShaders.use();
-        ScreenShaders.setFloat("iTime", (float)glfwGetTime());
         glDrawArrays(GL_TRIANGLE_STRIP, 0, 4);
 
-        // glfw: swap buffers and poll IO events (keys pressed/released, mouse moved etc.)
-        // -------------------------------------------------------------------------------
+        // glfw: swap buffers and poll IO events
         glfwSwapBuffers(window);
         glfwPollEvents();
     }
 
     // glfw: terminate, clearing all previously allocated GLFW resources.
-    // ------------------------------------------------------------------
     glfwTerminate();
     return 0;
 }
 
 // process all input: query GLFW whether relevant keys are pressed/released this frame and react accordingly
-// ---------------------------------------------------------------------------------------------------------
 void processInput(GLFWwindow *window)
 {
     if (glfwGetKey(window, GLFW_KEY_ESCAPE) == GLFW_PRESS)
@@ -98,7 +101,6 @@ void processInput(GLFWwindow *window)
 }
 
 // glfw: whenever the window size changed (by OS or user resize) this callback function executes
-// ---------------------------------------------------------------------------------------------
 void framebuffer_size_callback(GLFWwindow* window, int width, int height)
 {
     // make sure the viewport matches the new window dimensions; note that width and 

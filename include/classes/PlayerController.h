@@ -4,6 +4,7 @@
 #include <vector>
 #include <glad/glad.h>
 #include <GLFW/glfw3.h>
+#include <cmath>
 
 #include <classes/GLshader.h>
 
@@ -12,28 +13,108 @@
 class PlayerController
 {
 private:
+    double oldMouseX;
+    double oldMouseY;
+    float yaw = -1.571f; // initial yaw, looking along negative z
+    float pitch = 0.0f;
+    // adjust sensitivity as needed
+    float sensitivity = 0.001f;
 public:
-    float speed;
+    float speed = 1.0;
     float posX;
     float posY;
     float posZ;
     float dirX;
+    float dirY;
     float dirZ;
+
     PlayerController(GLFWwindow *window) {
         posX = 0.0;
         posY = 0.0;
-        posZ = 0.0;
+        posZ = 1.0;
     }
-    void HandleInputs(GLFWwindow *window) {
-        //X
-        if (glfwGetKey(window, GLFW_KEY_W) == GLFW_PRESS) posX += 1.0;
-        if (glfwGetKey(window, GLFW_KEY_S) == GLFW_PRESS) posX -= 1.0;
-        //Y
-        if (glfwGetKey(window, GLFW_KEY_SPACE) == GLFW_PRESS) posY += 1.0;
-        if (glfwGetKey(window, GLFW_KEY_LEFT_SHIFT) == GLFW_PRESS) posY -= 1.0;
-        //Z
-        if (glfwGetKey(window, GLFW_KEY_A) == GLFW_PRESS) posZ += 1.0;
-        if (glfwGetKey(window, GLFW_KEY_D) == GLFW_PRESS) posZ -= 1.0;
+
+    void HandleInputs(GLFWwindow *window, float deltaTime) {
+        // forward from yaw/pitch
+        float forwardX = cosf(yaw) * cosf(pitch);
+        float forwardY = sinf(pitch);
+        float forwardZ = sinf(yaw) * cosf(pitch);
+    
+        float len = sqrtf(forwardX*forwardX + forwardY*forwardY + forwardZ*forwardZ);
+        forwardX /= len;
+        forwardY /= len;
+        forwardZ /= len;
+
+        // up direction
+        float upX = 0.0f, upY = 1.0f, upZ = 0.0f;
+
+        // right = normalize(cross(forward, up))
+        float rightX = forwardZ*upY - forwardY*upZ;   // f × u
+        float rightY = forwardX*upZ - forwardZ*upX;
+        float rightZ = forwardY*upX - forwardX*upY;
+
+        float rlen = sqrtf(rightX*rightX + rightY*rightY + rightZ*rightZ);
+        rightX /= rlen;
+        rightY /= rlen;
+        rightZ /= rlen;
+
+        // forward/back
+        if (glfwGetKey(window, GLFW_KEY_W) == GLFW_PRESS) {
+            posX += forwardX * speed * deltaTime;
+            posY += forwardY * speed * deltaTime;
+            posZ += forwardZ * speed * deltaTime;
+        }
+        if (glfwGetKey(window, GLFW_KEY_S) == GLFW_PRESS) {
+            posX -= forwardX * speed * deltaTime;
+            posY -= forwardY * speed * deltaTime;
+            posZ -= forwardZ * speed * deltaTime;
+        }
+
+        // strafe
+        if (glfwGetKey(window, GLFW_KEY_A) == GLFW_PRESS) {
+            posX -= rightX * speed * deltaTime;
+            posY -= rightY * speed * deltaTime;
+            posZ -= rightZ * speed * deltaTime;
+        }
+        if (glfwGetKey(window, GLFW_KEY_D) == GLFW_PRESS) {
+            posX += rightX * speed * deltaTime;
+            posY += rightY * speed * deltaTime;
+            posZ += rightZ * speed * deltaTime;
+        }
+
+        // up/down
+        if (glfwGetKey(window, GLFW_KEY_SPACE) == GLFW_PRESS) {
+            posY += speed * deltaTime;
+        }
+        if (glfwGetKey(window, GLFW_KEY_LEFT_SHIFT) == GLFW_PRESS) {
+            posY -= speed * deltaTime;
+        }
+    }
+
+    void HandleMouseInput(GLFWwindow *window) {
+        // delta mouse movement
+        double mousePosX;
+        double mousePosY;
+        glfwGetCursorPos(window, &mousePosX, &mousePosY);
+        double mouseDeltaX = mousePosX - oldMouseX;
+        double mouseDeltaY = mousePosY - oldMouseY;
+        oldMouseX = mousePosX;
+        oldMouseY = mousePosY;
+
+        // update pitch and yaw
+        mouseDeltaX *= sensitivity;
+        mouseDeltaY *= sensitivity;
+        yaw -= mouseDeltaX;
+        pitch -= mouseDeltaY;
+
+        // clamp pitch to prevent flipping
+        if (pitch > 1.57f) pitch = 1.57f;
+        if (pitch < -1.57f) pitch = -1.57f;
+
+        // trigonometry to project to vector direction
+        dirX = cos(yaw) * cos(pitch);
+        dirY = sin(pitch);
+        dirZ = sin(yaw) * cos(pitch);
     }
 };
 

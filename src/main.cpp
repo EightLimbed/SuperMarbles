@@ -50,6 +50,8 @@ int main()
     // initialize player
     // ------------------------------------
     PlayerController Player(window);
+    // hide mouse
+    glfwSetInputMode(window, GLFW_CURSOR, GLFW_CURSOR_DISABLED);
 
     // build and compile shader program
     // ------------------------------------
@@ -64,15 +66,26 @@ int main()
     glMemoryBarrier(GL_SHADER_STORAGE_BARRIER_BIT);
 
     // render loop
+    float deltaTime = 0.0f;
+    float lastTime = 0.0f;
     // -----------
     while (!glfwWindowShouldClose(window))
     {
+        // delta time
+        float currentTime = glfwGetTime();
+        deltaTime = currentTime - lastTime;
+        lastTime = currentTime;
         // process input
         processInput(window);
-        Player.HandleInputs(window);
+        Player.HandleInputs(window, deltaTime);
+        Player.HandleMouseInput(window);
+        // upload player data to GPU
         ScreenShaders.setFloat("pPosX", Player.posX);
         ScreenShaders.setFloat("pPosY", Player.posY);
         ScreenShaders.setFloat("pPosZ", Player.posZ);
+        ScreenShaders.setFloat("pDirX", Player.dirX);
+        ScreenShaders.setFloat("pDirY", Player.dirY);
+        ScreenShaders.setFloat("pDirZ", Player.dirZ);
 
         // render
         glClear(GL_COLOR_BUFFER_BIT);
@@ -97,7 +110,8 @@ int main()
 void processInput(GLFWwindow *window)
 {
     if (glfwGetKey(window, GLFW_KEY_ESCAPE) == GLFW_PRESS)
-        glfwSetWindowShouldClose(window, true);
+        glfwSetInputMode(window, GLFW_CURSOR, GLFW_CURSOR_NORMAL);
+        //glfwSetWindowShouldClose(window, true);
 }
 
 // glfw: whenever the window size changed (by OS or user resize) this callback function executes

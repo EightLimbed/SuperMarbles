@@ -12,7 +12,8 @@ uniform float pDirY;
 uniform float pDirZ;
 
 float getPlanet(vec3 p) {
-    return length(p)-1.0;
+    vec3 q = abs(p) - 0.1;
+    return length(max(q,0.0)) + min(max(q.x,max(q.y,q.z)),0.0);
 }
 
 // camera shizzle
@@ -29,7 +30,7 @@ void main() {
     FragColor = vec4(0.0);
     vec3 ro = vec3(pPosX,pPosY,pPosZ);
     vec3 lookAt = vec3(pDirX, pDirY, pDirZ);
-    vec3 rd = getRayDir(gl_FragCoord.xy, vec2(400,300), lookAt, 1.0);
+    vec3 rd = getRayDir(gl_FragCoord.xy, vec2(800,600), lookAt, 1.0);
 
     float t = 0.0;
 

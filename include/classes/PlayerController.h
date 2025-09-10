@@ -20,7 +20,11 @@ private:
     // adjust sensitivity as needed
     float sensitivity = 0.001f;
 public:
+    // up direction
+    float upX = 0.0f, upY = 1.0f, upZ = 0.0f;
+    // move speed
     float speed = 1.0;
+    // properties
     float posX;
     float posY;
     float posZ;
@@ -36,17 +40,14 @@ public:
 
     void HandleInputs(GLFWwindow *window, float deltaTime) {
         // forward from yaw/pitch
-        float forwardX = cosf(yaw) * cosf(pitch);
-        float forwardY = sinf(pitch);
-        float forwardZ = sinf(yaw) * cosf(pitch);
+        float forwardX = cosf(yaw); //* cosf(pitch);
+        float forwardY = 0.0f;
+        float forwardZ = sinf(yaw); //* cosf(pitch);
     
         float len = sqrtf(forwardX*forwardX + forwardY*forwardY + forwardZ*forwardZ);
         forwardX /= len;
         forwardY /= len;
         forwardZ /= len;
-
-        // up direction
-        float upX = 0.0f, upY = 1.0f, upZ = 0.0f;
 
         // right = normalize(cross(forward, up))
         float rightX = forwardZ*upY - forwardY*upZ;   // f × u
@@ -84,10 +85,14 @@ public:
 
         // up/down
         if (glfwGetKey(window, GLFW_KEY_SPACE) == GLFW_PRESS) {
-            posY += speed * deltaTime;
+            posX += upX * speed * deltaTime;
+            posY += upY * speed * deltaTime;
+            posZ += upZ * speed * deltaTime;
         }
         if (glfwGetKey(window, GLFW_KEY_LEFT_SHIFT) == GLFW_PRESS) {
-            posY -= speed * deltaTime;
+            posX -= upX * speed * deltaTime;
+            posY -= upY * speed * deltaTime;
+            posZ -= upZ * speed * deltaTime;
         }
     }
 

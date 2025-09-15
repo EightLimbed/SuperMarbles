@@ -12,7 +12,9 @@ uniform float pDirY;
 uniform float pDirZ;
 
 float getPlanet(vec3 p) {
-    vec3 q = abs(p) - 0.1;
+    vec3 s = vec3(0.5,0.5,0.5);
+    vec3 q = abs(p - s*round(p/s))-0.1;
+    //vec3 q = abs(p) - 0.1;
     return length(max(q,0.0)) + min(max(q.x,max(q.y,q.z)),0.0);
 }
 
@@ -38,7 +40,7 @@ void main() {
         vec3 p = ro + t * rd;
         float d = getPlanet(p);
         if (d < 0.001) {
-            FragColor = vec4(vec3(0.7,1.2,1.2)-vec3(t/5.0),1.0);
+            FragColor = vec4(vec3(0.7,1.2,1.2)-vec3(t/10.0),1.0);
             break;
         }
         t += d;

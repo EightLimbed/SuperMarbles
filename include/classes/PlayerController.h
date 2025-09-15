@@ -100,11 +100,19 @@ public:
         // delta mouse movement
         double mousePosX;
         double mousePosY;
-        glfwGetCursorPos(window, &mousePosX, &mousePosY);
-        double mouseDeltaX = mousePosX - oldMouseX;
-        double mouseDeltaY = mousePosY - oldMouseY;
-        oldMouseX = mousePosX;
-        oldMouseY = mousePosY;
+        double mouseDeltaX;
+        double mouseDeltaY;
+        int inputMode;
+        if (glfwGetInputMode(window,GLFW_CURSOR) == GLFW_CURSOR_DISABLED) {
+            glfwGetCursorPos(window, &mousePosX, &mousePosY);
+            mouseDeltaX = mousePosX - oldMouseX;
+            mouseDeltaY = mousePosY - oldMouseY;
+            oldMouseX = mousePosX;
+            oldMouseY = mousePosY;
+        } else {
+            mouseDeltaX = 0.0;
+            mouseDeltaY = 0.0;
+        }
 
         // update pitch and yaw
         mouseDeltaX *= sensitivity;

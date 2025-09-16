@@ -13,9 +13,10 @@ uniform float pDirZ;
 
 float getPlanet(vec3 p) {
     vec3 s = vec3(0.5,0.5,0.5);
-    vec3 q = abs(p - s*round(p/s))-0.1;
+    vec3 ID = round(p/s);
+    vec3 q = p - s*ID;
     //vec3 q = abs(p) - 0.1;
-    return length(max(q,0.0)) + min(max(q.x,max(q.y,q.z)),0.0);
+    return length(q)-0.1;
 }
 
 // camera shizzle
@@ -27,6 +28,20 @@ vec3 getRayDir(vec2 fragCoord, vec2 res, vec3 lookAt, float zoom) {
     return normalize(f + zoom * (uv.x*r + uv.y*u));
 }
 
+float lightMarch(vec3 ro, vec3 lightPos) {
+    vec3 rd = normalize(ro-lightPos);
+    float t = 0.0;
+    for (int i = 0; i < 128; i++) {
+        vec3 p = ro + t * rd;
+        float d = getPlanet(p);
+        if (d < 0.001) return t*2.0;
+        if (length(p-lightPos)<d) return t;
+        t += d;
+        if (t > 40.0) return t;
+    }
+}
+
+// main raymarching loop
 void main() {
     // camera setup
     FragColor = vec4(0.0);
@@ -40,7 +55,9 @@ void main() {
         vec3 p = ro + t * rd;
         float d = getPlanet(p);
         if (d < 0.001) {
-            FragColor = vec4(vec3(0.7,1.2,1.2)-vec3(t/10.0),1.0);
+            // does lighting if hits
+            float tL = lightMarch(p, vec3(0.5));
+            FragColor = vec4(vec3(0.7,1.2,1.2)-vec3(tL/10.0),1.0);
             break;
         }
         t += d;

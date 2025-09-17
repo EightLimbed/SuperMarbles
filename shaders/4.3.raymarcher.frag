@@ -6,10 +6,13 @@ uniform float pPosX;
 uniform float pPosY;
 uniform float pPosZ;
 
-//player direction
+// player direction
 uniform float pDirX;
 uniform float pDirY;
 uniform float pDirZ;
+
+// time
+uniform float iTime;
 
 float getPlanet(vec3 p) {
     vec3 s = vec3(0.5,0.5,0.5);
@@ -27,16 +30,17 @@ vec3 getRayDir(vec2 fragCoord, vec2 res, vec3 lookAt, float zoom) {
     return normalize(f + zoom * (uv.x*r + uv.y*u));
 }
 
-float lightMarch(vec3 ro, vec3 lightPos) {
+float lightMarch(vec3 ro, vec3 lightPos, float lightStren) {
+    float lightMod = 1.0/lightStren;
     vec3 rd = normalize(lightPos-ro);
-    float t = 0.0;
+    float t = 0.01;
+    float dist = length(ro-lightPos);
     for (int i = 0; i < 128; i++) {
         vec3 p = ro + t * rd;
         float d = getPlanet(p);
-        float tL = length(lightPos-p);
-        if (d < 0.0001) return (t+tL)+1.0; // ray hits something before light source
-        if (tL<d) return (t+tL); // ray intersects light source
-        if (t > 40.0) return (t+tL); // ray travels too far
+        if (d < 0.001) return dist*lightMod*2.0; // ray hits something before light source
+        if (length(lightPos-p) < d) return dist*lightMod; // ray intersects light source
+        if (t > 40.0) return dist*lightMod; // ray travels too far
         t += d;
     }
 }
@@ -56,9 +60,9 @@ void main() {
         float d = getPlanet(p);
         if (d < 0.001) {
             // does lighting if hits
-            float tL = lightMarch(p, vec3(3.5));
+            float tL = lightMarch(p, 3.5*vec3(cos(iTime),0.0,sin(iTime)), 20.0);
             //FragColor = vec4(vec3(tL,tL,tL),1.0);
-            FragColor = vec4(vec3(0.7,1.0,1.0)-vec3(tL/10.0),1.0);
+            FragColor = vec4(vec3(0.7,1.0,1.0)-vec3(tL),1.0);
             break;
         }
         t += d;

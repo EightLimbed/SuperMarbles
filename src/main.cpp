@@ -40,7 +40,6 @@ int main()
     glfwSetFramebufferSizeCallback(window, framebuffer_size_callback);
 
     // glad: load all OpenGL function pointers
-    // ---------------------------------------
     if (!gladLoadGLLoader((GLADloadproc)glfwGetProcAddress))
     {
         std::cout << "Failed to initialize GLAD" << std::endl;
@@ -48,14 +47,12 @@ int main()
     }
 
     // initialize player
-    // ------------------------------------
     PlayerController Player(window);
     // hide mouse
     glfwSetInputMode(window, GLFW_CURSOR, GLFW_CURSOR_DISABLED);
 
     // build and compile shader program
-    // ------------------------------------
-    Shader ScreenShaders("shaders/4.3.screenquad.vert", "shaders/4.3.raymarcher.frag");
+    Shader ScreenShader("shaders/4.3.screenquad.vert","shaders/4.3.raymarcher.frag");
 
     // vaos need to be bound because of biolerplating shizzle (even if not used)
     GLuint vao;
@@ -68,32 +65,33 @@ int main()
     // render loop
     float deltaTime = 0.0f;
     float lastTime = 0.0f;
-    // -----------
+
     while (!glfwWindowShouldClose(window))
     {
         // delta time
-        float currentTime = glfwGetTime();
+        float currentTime = float(glfwGetTime());
         deltaTime = currentTime - lastTime;
         lastTime = currentTime;
         // process input
-        processInput(window);
         Player.HandleInputs(window, deltaTime);
         Player.HandleMouseInput(window);
         // upload player data to GPU
-        ScreenShaders.setFloat("pPosX", Player.posX);
-        ScreenShaders.setFloat("pPosY", Player.posY);
-        ScreenShaders.setFloat("pPosZ", Player.posZ);
-        ScreenShaders.setFloat("pDirX", Player.dirX);
-        ScreenShaders.setFloat("pDirY", Player.dirY);
-        ScreenShaders.setFloat("pDirZ", Player.dirZ);
+        ScreenShader.setFloat("iTime", currentTime*0.5);
+        ScreenShader.setFloat("pPosX", Player.posX);
+        ScreenShader.setFloat("pPosY", Player.posY);
+        ScreenShader.setFloat("pPosZ", Player.posZ);
+        ScreenShader.setFloat("pDirX", Player.dirX);
+        ScreenShader.setFloat("pDirY", Player.dirY);
+        ScreenShader.setFloat("pDirZ", Player.dirZ);
+        processInput(window);
 
         // render
         glClear(GL_COLOR_BUFFER_BIT);
         
         // compute shaders go here
 
-        // render the triangle and fragment
-        ScreenShaders.use();
+        // render the screen
+        ScreenShader.use();
         glDrawArrays(GL_TRIANGLE_STRIP, 0, 4);
 
         // glfw: swap buffers and poll IO events
@@ -109,9 +107,15 @@ int main()
 // process all input: query GLFW whether relevant keys are pressed/released this frame and react accordingly
 void processInput(GLFWwindow *window)
 {
-    if (glfwGetKey(window, GLFW_KEY_ESCAPE) == GLFW_PRESS)
+    if (glfwGetKey(window, GLFW_KEY_ESCAPE) == GLFW_PRESS) {
         glfwSetInputMode(window, GLFW_CURSOR, GLFW_CURSOR_NORMAL);
+        glfwSetCursorPos(window, 0.0,0.0);
+    }
         //glfwSetWindowShouldClose(window, true);
+    if (glfwGetMouseButton(window, GLFW_MOUSE_BUTTON_LEFT) == GLFW_PRESS) {
+        glfwFocusWindow(window);
+        glfwSetInputMode(window, GLFW_CURSOR, GLFW_CURSOR_DISABLED);
+    }
 }
 
 // glfw: whenever the window size changed (by OS or user resize) this callback function executes

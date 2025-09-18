@@ -16,21 +16,21 @@ uniform float iTime;
 
 // constants
 const vec3 s = vec3(0.4,0.4,0.4);
-const float e = 0.001;
+const float e = 0.0001;
 
 vec3 getDomainID(vec3 p) {
     return clamp(round(p/s),-3.0,3.0);
 }
 
 float getPlanet(vec3 p) {
-    //vec3 q = abs(p - s*getDomainID(p))-0.1;
-    //return length(max(q,0.0)) + min(max(q.x,max(q.y,q.z)),0.0);
-    vec3 q = p - s*getDomainID(p);
-    return length(q)-0.1;
+    vec3 q = abs(p - s*getDomainID(p))-0.1;
+    return length(max(q,0.0)) + min(max(q.x,max(q.y,q.z)),0.0);
+    //vec3 q = p - s*getDomainID(p);
+    //return length(q)-0.1;
 }
 
 vec3 getNormal(vec3 p) {
-    // simple finite-difference gradient
+    // surface normals
     return normalize(vec3(
         getPlanet(p + vec3(e,0,0)) - getPlanet(p - vec3(e,0,0)),
         getPlanet(p + vec3(0,e,0)) - getPlanet(p - vec3(0,e,0)),
@@ -52,15 +52,16 @@ float lightMarch(vec3 ro, vec3 lightPos, float lightStren) {
     vec3 rd = normalize(lightPos-ro);
     float t = 0.0;
     float dist = length(ro-lightPos);
-    ro += getNormal(ro)*e*2.0;
+    float atten = 0.0;
+    ro += getNormal(ro)*e;
     for (int i = 0; i < 128; i++) {
         vec3 p = ro + t * rd;
         float d = getPlanet(p);
-        if (d < e) return dist*lightMod*1.5; // ray hits something before light source
-        if (t > dist) return dist*lightMod; // ray hits/passes light source
-        t += d;
+        if (d < e) atten -= d*3.5; // ray hits something before light source
+        if (t > dist) return (dist+atten)*lightMod; // ray hits/passes light source
+        t += (d < e) ? dist/128.0 : d;
     }
-    return dist*lightMod*1.5;
+    return (dist+atten)*lightMod;
 }
 
 // main raymarching loop

@@ -76,7 +76,7 @@ int main()
         Player.HandleInputs(window, deltaTime);
         Player.HandleMouseInput(window);
         // upload player data to GPU
-        ScreenShader.setFloat("iTime", currentTime*0.1);
+        ScreenShader.setFloat("iTime", currentTime*0.5);
         ScreenShader.setFloat("pPosX", Player.posX);
         ScreenShader.setFloat("pPosY", Player.posY);
         ScreenShader.setFloat("pPosZ", Player.posZ);

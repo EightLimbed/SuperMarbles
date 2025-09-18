@@ -14,11 +14,28 @@ uniform float pDirZ;
 // time
 uniform float iTime;
 
+// constants
+const vec3 s = vec3(0.4,0.4,0.4);
+const float e = 0.001;
+
+vec3 getDomainID(vec3 p) {
+    return clamp(round(p/s),-3.0,3.0);
+}
+
 float getPlanet(vec3 p) {
-    vec3 s = vec3(0.5,0.5,0.5);
-    vec3 ID = round(p/s);
-    vec3 q = p - s*clamp(ID,-3.0,3.0);
+    //vec3 q = abs(p - s*getDomainID(p))-0.1;
+    //return length(max(q,0.0)) + min(max(q.x,max(q.y,q.z)),0.0);
+    vec3 q = p - s*getDomainID(p);
     return length(q)-0.1;
+}
+
+vec3 getNormal(vec3 p) {
+    // simple finite-difference gradient
+    return normalize(vec3(
+        getPlanet(p + vec3(e,0,0)) - getPlanet(p - vec3(e,0,0)),
+        getPlanet(p + vec3(0,e,0)) - getPlanet(p - vec3(0,e,0)),
+        getPlanet(p + vec3(0,0,e)) - getPlanet(p - vec3(0,0,e))
+    ));
 }
 
 // camera shizzle
@@ -33,16 +50,17 @@ vec3 getRayDir(vec2 fragCoord, vec2 res, vec3 lookAt, float zoom) {
 float lightMarch(vec3 ro, vec3 lightPos, float lightStren) {
     float lightMod = 1.0/lightStren;
     vec3 rd = normalize(lightPos-ro);
-    float t = 0.01;
+    float t = 0.0;
     float dist = length(ro-lightPos);
+    ro += getNormal(ro)*e*2.0;
     for (int i = 0; i < 128; i++) {
         vec3 p = ro + t * rd;
         float d = getPlanet(p);
-        if (d < 0.001) return dist*lightMod*2.0; // ray hits something before light source
-        if (length(lightPos-p) < d) return dist*lightMod; // ray intersects light source
-        if (t > 40.0) return dist*lightMod; // ray travels too far
+        if (d < e) return dist*lightMod*1.5; // ray hits something before light source
+        if (t > dist) return dist*lightMod; // ray hits/passes light source
         t += d;
     }
+    return dist*lightMod*1.5;
 }
 
 // main raymarching loop
@@ -58,9 +76,9 @@ void main() {
     for (int i = 0; i < 128; i++) {
         vec3 p = ro + t * rd;
         float d = getPlanet(p);
-        if (d < 0.001) {
+        if (d < e) {
             // does lighting if hits
-            float tL = lightMarch(p, 3.5*vec3(cos(iTime),0.0,sin(iTime)), 20.0);
+            float tL = lightMarch(p, 3.5*vec3(cos(iTime),1.0,sin(iTime)), 10.0);
             //FragColor = vec4(vec3(tL,tL,tL),1.0);
             FragColor = vec4(vec3(0.7,1.0,1.0)-vec3(tL),1.0);
             break;

@@ -76,7 +76,7 @@ int main()
         Player.HandleInputs(window, deltaTime);
         Player.HandleMouseInput(window);
         // upload player data to GPU
-        ScreenShader.setFloat("iTime", currentTime*0.5);
+        ScreenShader.setFloat("iTime", currentTime*0.1);
         ScreenShader.setFloat("pPosX", Player.posX);
         ScreenShader.setFloat("pPosY", Player.posY);
         ScreenShader.setFloat("pPosZ", Player.posZ);
@@ -111,7 +111,6 @@ void processInput(GLFWwindow *window)
         glfwSetInputMode(window, GLFW_CURSOR, GLFW_CURSOR_NORMAL);
         glfwSetCursorPos(window, 0.0,0.0);
     }
-        //glfwSetWindowShouldClose(window, true);
     if (glfwGetMouseButton(window, GLFW_MOUSE_BUTTON_LEFT) == GLFW_PRESS) {
         glfwFocusWindow(window);
         glfwSetInputMode(window, GLFW_CURSOR, GLFW_CURSOR_DISABLED);
